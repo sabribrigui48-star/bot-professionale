@@ -65,3 +65,45 @@ def handle_menu(message):
             "• Stesura di lettere di diffida, reclami o accordi tra aziende.\n\n"
             "Specifica il problema legale o invia il testo da esaminare."
         )
+    elif text == '📈 Marketing, B2B & Vendite':
+        bot.reply_to(
+            message,
+            "📈 **Strategie di Mercato & Lead Generation**\n\n"
+            "• Analisi di prodotti, concorrenza e prezzi.\n"
+            "• Creazione di piani di marketing mirati per il mercato italiano ed europeo.\n\n"
+            "Dimmi cosa vendi o quale mercato vuoi aggredire."
+        )
+    elif text == '✉️ Generatore Email & Trattative':
+        bot.reply_to(
+            message,
+            "✉️ **Comunicazioni e Trattative Professionali**\n\n"
+            "• Scrittura di email formali a partner, avvocati e fornitori.\n"
+            "• Gestione delle trattative di prezzo e accordi commerciali.\n\n"
+            "Scrivi le istruzioni: es. *'Manda un'email all'avvocato X per chiudere l'accordo a queste condizioni...'*"
+        )
+    elif text == '📊 Analisi Aziendale & Bilanci':
+        bot.reply_to(
+            message,
+            "📊 **Controllo di Gestione e Finanza**\n\n"
+            "• Interpretazione di dati aziendali, margini di guadagno e costi.\n"
+            "• Supporto per la pianificazione finanziaria.\n\n"
+            "Inserisci i dati numerici o i punti chiave della tua attività."
+        )
+    elif text == '⚙️ Info & Modalità d\'Uso':
+        bot.reply_to(
+            message,
+            "ℹ️ **Informazioni sul Sistema**\n\n"
+            "• **Stato**: Online 24/7 su Render 🟢\n"
+            "• **Modalità**: Human-in-the-loop (l'IA elabora e prepara tutto, tu dai il consenso finale prima di ogni azione).\n"
+            "• **Ambiti**: Legge tedesca/italiana, commercio, marketing e automazione."
+        )
+    else:
+        bot.reply_to(
+            message,
+            f"🔄 Richiesta registrata:\n\n\"{text}\"\n\n"
+            "Sto elaborando l'analisi professionale basata sulle normative e strategie aziendali richieste...",
+            parse_mode="Markdown"
+        )
+
+print("Bot Professionale Avanzato avviato con successo...")
+bot.infinity_polling()
