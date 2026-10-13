@@ -65,6 +65,7 @@ def handle_menu(message):
             "• Stesura di lettere di diffida, reclami o accordi tra aziende.\n\n"
             "Specifica il problema legale o invia il testo da esaminare."
         )
+
     elif text == '📈 Marketing, B2B & Vendite':
         bot.reply_to(
             message,
@@ -107,4 +108,3 @@ def handle_menu(message):
 
 print("Bot Professionale Avanzato avviato con successo...")
 bot.infinity_polling()
-
