@@ -107,3 +107,4 @@ def handle_menu(message):
 
 print("Bot Professionale Avanzato avviato con successo...")
 bot.infinity_polling()
+
