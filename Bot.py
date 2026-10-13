@@ -62,4 +62,6 @@ def handle_menu(message):
             message,
             "⚖️ **Diritto Civile e Commerciale (Italia / Germania)**\n\n"
             "• Analisi di clausole contrattuali.\n"
-            "• Stesura
+            "• Stesura di lettere di diffida, reclami o accordi tra aziende.\n\n"
+            "Specifica il problema legale o invia il testo da esaminare."
+        )
