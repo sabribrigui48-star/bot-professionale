@@ -1,6 +1,5 @@
 import os
 from flask import Flask
-from telebot import TeleBot, types
 from threading import Thread
 
 # Inizializzazione Flask per mantenere il bot attivo su Render 24/7
@@ -21,9 +20,10 @@ def keep_alive():
 keep_alive()
 
 import telebot
+from telebot import types
 
-# Token Telegram
-TOKEN = '8902653569:AAhsu5I3dM87y0URigBBKsGTx_YqwvFqV9w'
+# Token Telegram ufficiale verificato
+TOKEN = '8902053569:AAhsu5I3dM87y0URigBBKsGTx_YqwvFqV9w'
 bot = telebot.TeleBot(TOKEN)
 
 # Comando /start con menu principale completo
@@ -56,9 +56,9 @@ def handle_menu(message):
         bot.reply_to(
             message,
             "🇩🇪 **Gestione Schufa e Debiti in Germania**\n\n"
-            "Invia i dettagli o la foto del documento/sollecito ricevuto.\n"
+            "• Invia i dettagli o la foto del documento/sollecito ricevuto.\n"
             "• Posso redigere una proposta di rateizzazione formale (*Ratenzahlungsangebot*).\n"
-            "• Posso verificare la regolarità della segnalazione secondo il GDPR e le leggi tedesche.\n"
+            "• Posso verificare la regolarità della segnalazione secondo il GDPR e le leggi tedesche.\n\n"
             "Incolla qui i dati o descrivi la situazione."
         )
     elif text == '⚖️ Consulenza Legale & Contratti':
@@ -66,7 +66,7 @@ def handle_menu(message):
             message,
             "⚖️ **Diritto Civile e Commerciale (Italia / Germania)**\n\n"
             "• Analisi di clausole contrattuali.\n"
-            "• Stesura di lettere di diffida, reclami o accordi tra aziende.\n"
+            "• Stesura di lettere di diffida, reclami o accordi tra aziende.\n\n"
             "Specifica il problema legale o invia il testo da esaminare."
         )
     elif text == '📈 Marketing, B2B & Vendite':
@@ -74,15 +74,15 @@ def handle_menu(message):
             message,
             "📈 **Strategie di Mercato & Lead Generation**\n\n"
             "• Analisi di prodotti, concorrenza e prezzi.\n"
-            "• Creazione di piani di marketing mirati per il mercato italiano ed europeo.\n"
+            "• Creazione di piani di marketing mirati per il mercato italiano ed europeo.\n\n"
             "Dimmi cosa vendi o quale mercato vuoi aggredire."
         )
     elif text == '✉️ Generatore Email & Trattative':
         bot.reply_to(
             message,
             "✉️ **Comunicazioni e Trattative Professionali**\n\n"
-            "• Scrittura di email formali a partner, avvocati o fornitori.\n"
-            "• Gestione delle trattative di prezzo e accordi commerciali.\n"
+            "• Scrittura di email formali a partner, avvocati e fornitori.\n"
+            "• Gestione delle trattative di prezzo e accordi commerciali.\n\n"
             "Scrivi le istruzioni: es. *'Manda un'email all'avvocato X per chiudere l'accordo a queste condizioni...'*"
         )
     elif text == '📊 Analisi Aziendale & Bilanci':
@@ -90,13 +90,13 @@ def handle_menu(message):
             message,
             "📊 **Controllo di Gestione e Finanza**\n\n"
             "• Interpretazione di dati aziendali, margini di guadagno e costi.\n"
-            "• Supporto per la pianificazione finanziaria.\n"
+            "• Supporto per la pianificazione finanziaria.\n\n"
             "Inserisci i dati numerici o i punti chiave della tua attività."
         )
     elif text == '⚙️ Info & Modalità d\'Uso':
         bot.reply_to(
             message,
-            "⚙️ **Informazioni sul Sistema**\n\n"
+            "ℹ️ **Informazioni sul Sistema**\n\n"
             "• **Stato**: Online 24/7 su Render 🟢\n"
             "• **Modalità**: Human-in-the-loop (l'IA elabora e prepara tutto, tu dai il consenso finale prima di ogni azione).\n"
             "• **Ambiti**: Legge tedesca/italiana, commercio, marketing e automazione."
@@ -104,7 +104,7 @@ def handle_menu(message):
     else:
         bot.reply_to(
             message,
-            f"📥 Richiesta registrata:\n> *{text}*\n\n"
+            f"🔄 Richiesta registrata:\n\n\"{text}\"\n\n"
             "Sto elaborando l'analisi professionale basata sulle normative e strategie aziendali richieste...",
             parse_mode="Markdown"
         )
