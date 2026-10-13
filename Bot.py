@@ -1,9 +1,7 @@
-
 import os
 from flask import Flask
 from threading import Thread
 
-# Inizializzazione Flask per mantenere il bot attivo su Render 24/7
 app = Flask(__name__)
 
 @app.route('/')
@@ -23,11 +21,9 @@ keep_alive()
 import telebot
 from telebot import types
 
-# Token Telegram ufficiale verificato
 TOKEN = '8902053569:AAhsu5I3dM87y0URigBBKsGTx_YqwvFqV9w'
 bot = telebot.TeleBot(TOKEN)
 
-# Comando /start con menu principale completo
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
     markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
@@ -48,7 +44,6 @@ def send_welcome(message):
     )
     bot.reply_to(message, testo, reply_markup=markup, parse_mode="Markdown")
 
-# Gestione interattiva di tutte le opzioni avanzate
 @bot.message_handler(func=lambda message: True)
 def handle_menu(message):
     text = message.text
