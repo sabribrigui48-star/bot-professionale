@@ -22,7 +22,8 @@ def ask_gemini(prompt):
     if not GEMINI_API_KEY:
         return "⚠️ Errore: Chiave API Gemini non configurata nelle variabili d'ambiente di Render."
     
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    # URL aggiornato a v1 per piena compatibilità con gemini-1.5-flash
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     
     headers = {'Content-Type': 'application/json'}
     data = {
