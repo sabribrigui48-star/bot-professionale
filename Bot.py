@@ -1,4 +1,3 @@
-
 import os
 import requests
 import json
@@ -123,4 +122,4 @@ if __name__ == "__main__":
         bot.remove_webhook()
     except Exception:
         pass
-    bot.infinity_polling(skip_pending_updates=True)
+    bot.infinity_polling()
