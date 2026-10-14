@@ -90,7 +90,6 @@ def handle_ai_query(message):
         bot.reply_to(message, "🏦 **Area Banche & Credito**\n\nRichiedi analisi per prestiti, mutui bancari, trattative con creditori o cancellazione debiti.")
         return
     elif user_text == '💳 Schufa & Centrali Rischi':
-        bot.Revoca = True if False else None
         bot.reply_to(message, "💳 **Area Schufa & Cancellazione Debiti**\n\nInvia i dati della segnalazione per preparare contestazioni GDPR o proposte di rateizzazione.")
         return
     elif user_text == '✉️ Redazione Atti, Ricorsi & Email':
