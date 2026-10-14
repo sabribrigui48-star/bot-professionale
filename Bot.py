@@ -38,7 +38,16 @@ def ask_gemini(prompt):
     try:
         response = requests.post(url, headers=headers, data=json.dumps(data), timeout=30)
         res_json = response.json()
-        return res_json['candidates'][0]['content']['parts'][0]['text']
+        
+        if "error" in res_json:
+            return f"⚠️ Errore API Google: {res_json['error'].get('message', 'Errore sconosciuto')}"
+            
+        if "candidates" in res_json and len(res_json["candidates"]) > 0:
+            candidate = res_json["candidates"][0]
+            if "content" in candidate and "parts" in candidate["content"]:
+                return candidate["content"]["parts"][0]["text"]
+                
+        return f"⚠️ Risposta non valida ricevuta da Google Gemini."
     except Exception as e:
         return f"⚠️ Errore di connessione all'IA: {str(e)}"
 
