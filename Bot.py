@@ -13,15 +13,19 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 system_instruction = (
     "Sei uno studio legale, fiscale e bancario virtuale di massimo livello, "
     "specializzato in Diritto Tedesco (DE) e Italiano (IT). "
-    "Fornisci consulenze operative, tecniche, giuridiche ed economiche altamente dettagliate."
+    "Fornisci consulenze operative, tecniche, giuridiche ed economiche highly dettagliate."
 )
 
 def ask_gemini(prompt):
     if not GEMINI_API_KEY:
         return "⚠️ Errore: Chiave API Gemini non configurata nelle variabili d'ambiente di Render."
     
-    # Endpoint v1beta per massima compatibilita con i modelli attuali
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    # Lista di modelli da provare in ordine di priorita
+    models_to_try = [
+        "gemini-1.5-flash",
+        "gemini-1.5-pro",
+        "gemini-2.0-flash-exp"
+    ]
     
     headers = {'Content-Type': 'application/json'}
     data = {
@@ -34,21 +38,32 @@ def ask_gemini(prompt):
         ]
     }
     
-    try:
-        response = requests.post(url, headers=headers, data=json.dumps(data), timeout=30)
-        res_json = response.json()
+    last_error = ""
+    
+    for model in models_to_try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
         
-        if "error" in res_json:
-            return f"⚠️ Errore API Google: {res_json['error'].get('message', 'Errore sconosciuto')}"
+        try:
+            response = requests.post(url, headers=headers, data=json.dumps(data), timeout=30)
+            res_json = response.json()
             
-        if "candidates" in res_json and len(res_json["candidates"]) > 0:
-            candidate = res_json["candidates"][0]
-            if "content" in candidate and "parts" in candidate["content"]:
-                return candidate["content"]["parts"][0]["text"]
+            if "error" in res_json:
+                last_error = res_json['error'].get('message', 'Errore sconosciuto')
+                # Se il modello non e trovato, continua il ciclo e prova il successivo
+                if "not found" in last_error.lower() or "not supported" in last_error.lower():
+                    continue
+                else:
+                    return f"⚠️ Errore API Google: {last_error}"
                 
-        return "⚠️ Risposta non valida ricevuta da Google Gemini."
-    except Exception as e:
-        return f"⚠️ Errore di connessione all'IA: {str(e)}"
+            if "candidates" in res_json and len(res_json["candidates"]) > 0:
+                candidate = res_json["candidates"][0]
+                if "content" in candidate and "parts" in candidate["content"]:
+                    return candidate["content"]["parts"][0]["text"]
+        except Exception as e:
+            last_error = str(e)
+            continue
+
+    return f"⚠️ Nessun modello Gemini compatibile trovato sulla tua chiave API. Dettaglio errore: {last_error}"
 
 # Inizializzazione bot e server Flask
 bot = telebot.TeleBot(TELEGRAM_TOKEN, threaded=False)
@@ -120,7 +135,7 @@ def handle_ai_query(message):
         bot.reply_to(message, "✉️ **Area Redazione Documenti**\n\nIndica quale documento vuoi che l'IA scriva per te (diffida, contratto, ricorso).")
         return
     elif user_text == '⚙️ Stato Assistente IA':
-        bot.reply_to(message, "⚙️ **Stato del Sistema**\n\n- Accesso: Blindato (ID `8795594889`)\n- Motore IA: Google Gemini Flash\n- Server: Render Webhook 🟢")
+        bot.reply_to(message, "⚙️ **Stato del Sistema**\n\n- Accesso: Blindato (ID `8795594889`)\n- Motore IA: Google Gemini Multi-Model Fallback\n- Server: Render Webhook 🟢")
         return
 
     wait_msg = bot.reply_to(message, "⏳ *Elaborazione dell'analisi legale/fiscale in corso...*", parse_mode="Markdown")
@@ -130,3 +145,4 @@ def handle_ai_query(message):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+
