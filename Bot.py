@@ -1,3 +1,4 @@
+
 import os
 import requests
 import json
@@ -5,7 +6,6 @@ import telebot
 from telebot import types
 from flask import Flask, request
 
-# --- CONFIGURAZIONE PRINCIPALE ---
 MY_TELEGRAM_ID = 8795594889
 TELEGRAM_TOKEN = '8902053569:AAHsDt8aesAcw01xZu_qJrOk0kxQp10thB8'
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
