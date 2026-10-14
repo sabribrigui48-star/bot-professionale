@@ -1,5 +1,3 @@
-
-
 import os
 import telebot
 from telebot import types
@@ -17,7 +15,6 @@ system_instruction = (
     "Fornisci consulenze operative, tecniche, giuridiche ed economiche altamente dettagliate."
 )
 
-# Inizializzazione Client Google GenAI SDK
 client = None
 if GEMINI_API_KEY:
     try:
@@ -30,7 +27,6 @@ def ask_gemini(prompt):
         return "⚠️ Errore: Chiave API Gemini non configurata nelle variabili d'ambiente di Render."
     
     try:
-        # Utilizzo dell'SDK ufficiale Google GenAI per gemini-2.5-flash o gemini-1.5-flash
         response = client.models.generate_content(
             model='gemini-2.5-flash',
             contents=f"{system_instruction}\n\nUtente: {prompt}"
@@ -39,7 +35,6 @@ def ask_gemini(prompt):
             return response.text
         return "⚠️ Nessuna risposta valida generata da Gemini."
     except Exception as e:
-        # Fallback automatico su gemini-1.5-flash se gemini-2.5-flash non e ancora disponibile
         try:
             response = client.models.generate_content(
                 model='gemini-1.5-flash',
@@ -50,11 +45,9 @@ def ask_gemini(prompt):
         except Exception as e2:
             return f"⚠️ Errore di connessione all'IA Google: {str(e2)}"
 
-# Inizializzazione bot e server Flask
 bot = telebot.TeleBot(TELEGRAM_TOKEN, threaded=False)
 app = Flask(__name__)
 
-# Configurazione automatica del Webhook su Render
 WEBHOOK_URL = f"https://bot-professionale-sabri.onrender.com/{TELEGRAM_TOKEN}"
 bot.remove_webhook()
 bot.set_webhook(url=WEBHOOK_URL)
