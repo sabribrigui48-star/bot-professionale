@@ -1,4 +1,3 @@
-
 import os
 import requests
 import json
@@ -41,12 +40,12 @@ def ask_gemini(prompt):
         
         if "error" in res_json:
             return f"⚠️ Errore Google API: {res_json['error'].get('message', 'Errore sconosciuto')}"
-            
+        
         if "candidates" in res_json and len(res_json["candidates"]) > 0:
             parts = res_json["candidates"][0].get("content", {}).get("parts", [])
             if parts:
                 return parts[0].get("text", "Risposta vuota dall'IA.")
-                
+        
         return "⚠️ Nessuna risposta ricevuta dal modello IA."
     except Exception as e:
         return f"⚠️ Errore di connessione: {str(e)}"
@@ -73,53 +72,54 @@ def is_authorized(message):
 def send_welcome(message):
     if not is_authorized(message):
         return
-        
+
     markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
     btn_1 = types.KeyboardButton('🏛️ Immigrazione, Penale & Civile')
-    btn_2 = types.KeyboardButton('📊 Commercialista, Fisco & Tasse')
+    btn_2 = types.KeyboardButton('💶 Commercialista, Fisco & Tasse')
     btn_3 = types.KeyboardButton('🏦 Banche, Crediti, Mutui & Debiti')
-    btn_4 = types.KeyboardButton('💳 Schufa & Centrali Rischi')
-    btn_5 = types.KeyboardButton('✉️ Redazione Atti, Ricorsi & Email')
-    btn_6 = types.KeyboardButton('⚙️ Stato Assistente IA')
+    btn_4 = types.KeyboardButton('📜 Schufa & Centrali Rischi')
+    btn_5 = types.KeyboardButton('⚖️ Redazione Atti, Ricorsi & Email')
+    btn_6 = types.KeyboardButton('🤖 Stato Assistente IA')
     markup.add(btn_1, btn_2, btn_3, btn_4, btn_5, btn_6)
-    
+
     testo = (
         f"🔒 **Studio Legale, Fiscale e Bancario Privato di {message.from_user.first_name}**\n\n"
-        "Sistema con Intelligenza Artificiale Google Gemini per consulenza giuridica, fiscale e finanziaria (Italia/Germania).\n\n"
+        "Sistema con Intelligenza Artificiale Google Gemini per consulenza giuridica, fiscale e finanziaria (Italia/Germania).\n"
         "Scrivi liberamente il tuo caso o seleziona un'area:"
     )
     bot.reply_to(message, testo, reply_markup=markup, parse_mode="Markdown")
 
-@bot.message_handler(func=lambda message: True)
+# Filtro di sicurezza per evitare loop infiniti (ignora bot e messaggi vuoti)
+@bot.message_handler(func=lambda message: not message.from_user.is_bot and message.text)
 def handle_ai_query(message):
     if not is_authorized(message):
         return
-        
+
     user_text = message.text
-    
+
     if user_text == '🏛️ Immigrazione, Penale & Civile':
-        bot.reply_to(message, "🏛️ **Area Legale & Tribunali (IT/DE)**\n\nInvia la tua richiesta su cause penali, civili, lavoro, visti o permessi di soggiorno.")
+        bot.reply_to(message, "🇩🇪🇮🇹 **Area Legale & Tribunali (IT/DE)**\n\nInvia la tua richiesta su cause penali, civili o permessi di soggiorno in Germania/Italia.")
         return
-    elif user_text == '📊 Commercialista, Fisco & Tasse':
-        bot.reply_to(message, "📊 **Area Commercialista & Fisco (IT/DE)**\n\nChiedi informazioni su Steuererklärung, 730, tasse, Gewerbe, P.IVA e detrazioni.")
+    elif user_text == '💶 Commercialista, Fisco & Tasse':
+        bot.reply_to(message, "🇩🇪🇮🇹 **Area Commercialista & Fisco (IT/DE)**\n\nChiedi informazioni su Steuererklärung, Tasse, bilanci o scadenze fiscali.")
         return
     elif user_text == '🏦 Banche, Crediti, Mutui & Debiti':
-        bot.reply_to(message, "🏦 **Area Banche & Credito**\n\nRichiedi analisi per prestiti, mutui bancari, trattative con creditori o cancellazione debiti.")
+        bot.reply_to(message, "🇩🇪🇮🇹 **Area Banche & Credito**\n\nRichiedi analisi per prestiti, mutui bancari, trattative con istituti finanziari o estinzione debiti.")
         return
-    elif user_text == '💳 Schufa & Centrali Rischi':
-        bot.reply_to(message, "💳 **Area Schufa & Cancellazione Debiti**\n\nInvia i dati della segnalazione per preparare contestazioni GDPR o proposte di rateizzazione.")
+    elif user_text == '📜 Schufa & Centrali Rischi':
+        bot.reply_to(message, "🇩🇪 **Area Schufa & Cancellazione Debiti**\n\nInvia i dati della segnalazione per preparare la richiesta di cancellazione o correzione.")
         return
-    elif user_text == '✉️ Redazione Atti, Ricorsi & Email':
-        bot.reply_to(message, "✉️ **Area Redazione Documenti**\n\nIndica quale documento vuoi che l'IA scriva per te (diffida, contratto, ricorso).")
+    elif user_text == '⚖️ Redazione Atti, Ricorsi & Email':
+        bot.reply_to(message, "🇩🇪🇮🇹 **Area Redazione Documenti**\n\ Indica quale documento vuoi che l'IA scriva per te (diffida, ricorso, email formale o contratto).")
         return
-    elif user_text == '⚙️ Stato Assistente IA':
-        bot.reply_to(message, "⚙️ **Stato del Sistema**\n\n- Accesso: Blindato (ID `8795594889`)\n- Motore IA: Google Gemini Flash\n- Server: Render Webhook 🟢")
+    elif user_text == '🤖 Stato Assistente IA':
+        bot.reply_to(message, "🟢 **Stato del Sistema**\n- Accesso: Blindato (ID `8795594889`)\n- Motore IA: Google Gemini 2.0 Flash\n- Operatività: Germania & Italia attiva.")
         return
 
     wait_msg = bot.reply_to(message, "⏳ *Elaborazione dell'analisi legale/fiscale in corso...*", parse_mode="Markdown")
     ai_response = ask_gemini(user_text)
     bot.edit_message_text(ai_response, chat_id=message.chat.id, message_id=wait_msg.message_id, parse_mode="Markdown")
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
