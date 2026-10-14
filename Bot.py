@@ -18,15 +18,6 @@ if GEMINI_API_KEY:
 system_instruction = """
 Sei uno studio legale, fiscale e bancario virtuale di massimo livello, specializzato in Diritto Tedesco (DE) e Italiano (IT).
 Fornisci consulenze operative, tecniche, giuridiche ed economiche altamente dettagliate.
-
-Le tue competenze coprono:
-1. DIRITTO ITALIANO E TEDESCO (Immigrazione, Penale, Civile, Lavoro, Locazioni).
-2. COMMERCIALISTA & FISCO (Steuererklärung, 730, MwSt/IVA, Gewerbe, P.IVA).
-3. BANCHE, CREDITI & DEBITI (Prestiti, Mutui, Trattative con creditori).
-4. SCHUFA & CENTRALI RISCHI (Cancellazione dati GDPR, Ratenzahlungsangebot).
-5. REDAZIONE ATTI (Ricorsi, diffide, contratti, email formali).
-
-Risposte dirette, prive di convenevoli, estremamente tecniche e strutturate con riferimenti normativi.
 """
 
 # Configurazione modello Gemini
@@ -112,7 +103,7 @@ def handle_ai_query(message):
     
     try:
         if not model:
-            bot.edit_message_text("⚠️ **Errore:** Modello Gemini non inizializzato. Controlla `GEMINI_API_KEY` su Render.", chat_id=message.chat.id, message_id=wait_msg.message_id)
+            bot.edit_message_text("⚠️ **Errore:** Modello Gemini non inizializzato.", chat_id=message.chat.id, message_id=wait_msg.message_id)
             return
 
         response = model.generate_content(user_text)
@@ -120,7 +111,7 @@ def handle_ai_query(message):
         
     except Exception as e:
         bot.edit_message_text(
-            f"⚠️ **Errore di risposta IA:** `{str(e)}`\n\nVerifica la chiave `GEMINI_API_KEY` nelle impostazioni Environment su Render.",
+            f"⚠️ **Errore di risposta IA:** `{str(e)}`",
             chat_id=message.chat.id,
             message_id=wait_msg.message_id,
             parse_mode="Markdown"
