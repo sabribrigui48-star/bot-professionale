@@ -1,3 +1,4 @@
+
 import os
 import telebot
 from telebot import types
@@ -5,53 +6,45 @@ from flask import Flask
 from threading import Thread
 import google.generativeai as genai
 
-# --- CONFIGURAZIONE PRIVATA (ACCESSO BLINDATO) ---
-MY_TELEGRAM_ID = 8795594889  # Il tuo ID Telegram personale
+# --- CONFIGURAZIONE PRIVATA ---
+MY_TELEGRAM_ID = 8795594889
 TELEGRAM_TOKEN = '8902053569:AAFpamqLGB8zIEi7ZuL7teTsadNaB0ga2Us'
 
-# Chiave API di Google Gemini (da inserire su Render)
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "INSERISCI_QUI_LA_TUA_GEMINI_API_KEY")
-genai.configure(api_key=GEMINI_API_KEY)
+# Chiave API Gemini letta dalle variabili d'ambiente di Render
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
-# Configurazione del modello IA specializzato (Italia / Germania)
-generation_config = {
-    "temperature": 0.2,
-    "max_output_tokens": 2048,
-}
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
 
 system_instruction = """
 Sei uno studio legale, fiscale e bancario virtuale di massimo livello, specializzato in Diritto Tedesco (DE) e Italiano (IT).
 Fornisci consulenze operative, tecniche, giuridiche ed economiche altamente dettagliate.
 
-Le tue competenze trasversali coprono:
-1. DIRITTO ITALIANO E TEDESCO:
-   - Immigrazione (AufenthG, visti, ricongiungimenti, permessi UE/illimitati).
-   - Penale, Civile, Lavoro, Locazioni, Procedura Civile/Penale e Ricorsi nei Tribunali.
-2. COMMERCIALISTA & FISCO (IT/DE):
-   - Dichiarazione dei redditi (Steuererklärung, Modello 730/Redditi PF).
-   - Tasse, IVA/MwSt, P.IVA/Gewerbe, bonus statali, detrazioni e contabilità aziendale.
-3. BANCHE, CREDITI & DEBITI (IT/DE):
-   - Richieste di prestiti, mutui e finanziamenti bancari.
-   - Gestione, contestazione e risoluzione debiti.
-   - Schufa (Germania) e Centrali Rischi (Italia): pulizia, cancellazione dati GDPR e Ratenzahlungsangebot (piani di rientro).
-4. REDAZIONE ATTI E DOCUMENTI:
-   - Stesura diretta di lettere ufficiali, ricorsi, diffide, contratti ed email formali pronti da inviare o stampare.
+Le tue competenze coprono:
+1. DIRITTO ITALIANO E TEDESCO (Immigrazione, Penale, Civile, Lavoro, Locazioni).
+2. COMMERCIALISTA & FISCO (Steuererklärung, 730, MwSt/IVA, Gewerbe, P.IVA).
+3. BANCHE, CREDITI & DEBITI (Prestiti, Mutui, Trattative con creditori).
+4. SCHUFA & CENTRALI RISCHI (Cancellazione dati GDPR, Ratenzahlungsangebot).
+5. REDAZIONE ATTI (Ricorsi, diffide, contratti, email formali).
 
-Regole: Risposte dirette, prive di convenevoli, estremamente tecniche e strutturate, citando gli articoli di legge e le prassi bancarie/fiscali vigenti.
+Risposte dirette, prive di convenevoli, estremamente tecniche e strutturate con riferimenti normativi.
 """
 
-model = genai.GenerativeModel(
-    model_name="gemini-1.5-pro",
-    generation_config=generation_config,
-    system_instruction=system_instruction
-)
+# Configurazione modello Gemini
+try:
+    model = genai.GenerativeModel(
+        model_name="gemini-1.5-flash",
+        system_instruction=system_instruction
+    )
+except Exception:
+    model = None
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Studio Legale & Fiscale Gemini IA - Attivo 24/7"
+    return "Studio Legale & Fiscale Gemini IA - Server Attivo 24/7"
 
 def run():
     port = int(os.environ.get("PORT", 10000))
@@ -59,6 +52,7 @@ def run():
 
 def keep_alive():
     t = Thread(target=run)
+    t.daemon = True
     t.start()
 
 keep_alive()
@@ -97,40 +91,41 @@ def handle_ai_query(message):
     user_text = message.text
     
     if user_text == '🏛️ Immigrazione, Penale & Civile':
-        bot.reply_to(message, "🏛️ **Area Legale & Tribunali (IT/DE)**\n\nInvia la tua richiesta su cause penali, civili, lavoro, visti o permessi di soggiorno. L'IA analizzerà leggi e ricorsi.")
+        bot.reply_to(message, "🏛️ **Area Legale & Tribunali (IT/DE)**\n\nInvia la tua richiesta su cause penali, civili, lavoro, visti o permessi di soggiorno.")
         return
     elif user_text == '📊 Commercialista, Fisco & Tasse':
-        bot.reply_to(message, "📊 **Area Commercialista & Fisco (IT/DE)**\n\nChiedi informazioni su Steuererklärung, 730, tasse, Gewerbe, P.IVA e detrazioni fiscali.")
+        bot.reply_to(message, "📊 **Area Commercialista & Fisco (IT/DE)**\n\nChiedi informazioni su Steuererklärung, 730, tasse, Gewerbe, P.IVA e detrazioni.")
         return
     elif user_text == '🏦 Banche, Crediti, Mutui & Debiti':
-        bot.reply_to(message, "🏦 **Area Banche & Credito**\n\nRichiedi analisi per opzioni di prestito, mutui bancari, trattative con creditori o cancellazione posizioni debitorie.")
+        bot.reply_to(message, "🏦 **Area Banche & Credito**\n\nRichiedi analisi per prestiti, mutui bancari, trattative con creditori o cancellazione debiti.")
         return
     elif user_text == '💳 Schufa & Centrali Rischi':
-        bot.reply_to(message, "💳 **Area Schufa & Cancellazione Debiti**\n\nInvia i dati della segnalazione per preparare contestazioni GDPR o proposte di rateizzazione (*Ratenzahlungsangebot*).")
+        bot.reply_to(message, "💳 **Area Schufa & Cancellazione Debiti**\n\nInvia i dati della segnalazione per preparare contestazioni GDPR o proposte di rateizzazione.")
         return
     elif user_text == '✉️ Redazione Atti, Ricorsi & Email':
-        bot.reply_to(message, "✉️ **Area Redazione Documenti**\n\nIndica quale documento vuoi che l'IA scriva per te (es. diffida, contratto, ricorso per Ausländerbehörde/Tribunale).")
+        bot.reply_to(message, "✉️ **Area Redazione Documenti**\n\nIndica quale documento vuoi che l'IA scriva per te (diffida, contratto, ricorso).")
         return
     elif user_text == '⚙️ Stato Assistente IA':
-        bot.reply_to(message, "⚙️ **Stato del Sistema**\n\n- Accesso: Blindato (ID `8795594889`)\n- Motore IA: Google Gemini Pro\n- Server: Render 24/7 🟢")
+        bot.reply_to(message, "⚙️ **Stato del Sistema**\n\n- Accesso: Blindato (ID `8795594889`)\n- Motore IA: Google Gemini Flash\n- Server: Render 24/7 🟢")
         return
 
-    wait_msg = bot.reply_to(message, "⏳ *Elaborazione dell'analisi legale/fiscale con IA in corso...*", parse_mode="Markdown")
+    wait_msg = bot.reply_to(message, "⏳ *Elaborazione dell'analisi legale/fiscale in corso...*", parse_mode="Markdown")
     
     try:
-        # Generazione della risposta tramite Google Gemini
+        if not model:
+            bot.edit_message_text("⚠️ **Errore:** Modello Gemini non inizializzato. Controlla `GEMINI_API_KEY` su Render.", chat_id=message.chat.id, message_id=wait_msg.message_id)
+            return
+
         response = model.generate_content(user_text)
-        ai_reply = response.text
-        
-        bot.edit_message_text(ai_reply, chat_id=message.chat.id, message_id=wait_msg.message_id, parse_mode="Markdown")
+        bot.edit_message_text(response.text, chat_id=message.chat.id, message_id=wait_msg.message_id, parse_mode="Markdown")
         
     except Exception as e:
         bot.edit_message_text(
-            f"⚠️ **Configurazione richiesta:** Inserisci la tua chiave `GEMINI_API_KEY` nelle impostazioni **Environment** su Render.\n\nDettaglio: `{str(e)}`",
+            f"⚠️ **Errore di risposta IA:** `{str(e)}`\n\nVerifica la chiave `GEMINI_API_KEY` nelle impostazioni Environment su Render.",
             chat_id=message.chat.id,
             message_id=wait_msg.message_id,
             parse_mode="Markdown"
         )
 
 if __name__ == "__main__":
-    bot.infinity_polling()
+    bot.infinity_polling(skip_pending_updates=True)
