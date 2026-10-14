@@ -1,20 +1,24 @@
 import os
-from flask import Flask
-from threading import Thread
 import telebot
 from telebot import types
+from flask import Flask
+from threading import Thread
+import openai
 
 # --- CONFIGURAZIONE PRIVATA (ACCESSO BLINDATO) ---
-MY_TELEGRAM_ID = 8795594889  # Il tuo ID Telegram personale
+MY_TELEGRAM_ID = 8795594889  # Accesso esclusivo per il tuo Telegram ID
+TELEGRAM_TOKEN = '8902053569:AAFpamqLGB8zIEi7ZuL7teTsadNaB0ga2Us'
 
-TOKEN = '8902053569:AAFpamqLGB8zIEi7ZuL7teTsadNaB0ga2Us'
-bot = telebot.TeleBot(TOKEN)
+# Chiave API per l'Intelligenza Artificiale
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "INSERISCI_QUI_LA_TUA_OPENAI_API_KEY")
+openai.api_key = OPENAI_API_KEY
 
+bot = telebot.TeleBot(TELEGRAM_TOKEN)
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Assistente Privato - Riservato"
+    return "Studio Legale, Fiscale e Bancario IA - Attivo 24/7"
 
 def run():
     port = int(os.environ.get("PORT", 10000))
@@ -26,90 +30,103 @@ def keep_alive():
 
 keep_alive()
 
-# Controllo di sicurezza: autorizza SOLO te
+# Prompt di sistema: definisce l'intelligenza specializzata
+SYSTEM_PROMPT = """
+Sei uno studio legale, fiscale e bancario virtuale di massimo livello, specializzato in Diritto Tedesco (DE) e Italiano (IT).
+Fornisci consulenze operative, tecniche, giuridiche ed economiche altamente dettagliate.
+
+Le tue competenze trasversali coprono:
+1. DIRITTO ITALIANO E TEDESCO:
+   - Immigrazione (AufenthG, visti, ricongiungimenti, permessi UE/illimitati).
+   - Penale, Civile, Lavoro, Locazioni, Procedura Civile/Penale e Ricorsi nei Tribunali.
+2. COMMERCIALISTA & FISCO (IT/DE):
+   - Dichiarazione dei redditi (Steuererklärung, Modello 730/Redditi PF).
+   - Tasse, IVA/MwSt, P.IVA/Gewerbe, bonus statali, detrazioni e contabilità aziendale.
+3. BANCHE, CREDITI & DEBITI (IT/DE):
+   - Richieste di prestiti, mutui e finanziamenti bancari.
+   - Gestione, contestazione e risoluzione debiti.
+   - Schufa (Germania) e Centrali Rischi (Italia): pulizia, cancellazione dati GDPR e Ratenzahlungsangebot (piani di rientro).
+4. REDAZIONE ATTI E DOCUMENTI:
+   - Stesura diretta di lettere ufficiali, ricorsi, diffide, contratti ed email formali pronti da inviare o stampare.
+
+Regole: Risposte dirette, prive di convenevoli, estremamente tecniche e strutturate, citando gli articoli di legge e le prassi bancarie/fiscali vigenti.
+"""
+
 def is_authorized(message):
     return message.from_user.id == MY_TELEGRAM_ID
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
     if not is_authorized(message):
-        return  # Ignora totalmente chiunque altro
+        return  # Ignora estranei
         
     markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
     
-    btn_schufa = types.KeyboardButton('🇩🇪 Pratiche Schufa & Debiti (DE)')
-    btn_legale = types.KeyboardButton('⚖️ Consulenza Legale & Contratti')
-    btn_marketing = types.KeyboardButton('📈 Marketing, B2B & Vendite')
-    btn_email = types.KeyboardButton('✉️ Generatore Email & Trattative')
-    btn_analisi = types.KeyboardButton('📊 Analisi Aziendale & Bilanci')
-    btn_impostazioni = types.KeyboardButton('⚙️ Info & Modalità D\'Uso')
+    btn_1 = types.KeyboardButton('🏛️ Immigrazione, Penale & Civile')
+    btn_2 = types.KeyboardButton('📊 Commercialista, Fisco & Tasse')
+    btn_3 = types.KeyboardButton('🏦 Banche, Crediti, Mutui & Debiti')
+    btn_4 = types.KeyboardButton('💳 Schufa & Centrali Rischi')
+    btn_5 = types.KeyboardButton('✉️ Redazione Atti, Ricorsi & Email')
+    btn_6 = types.KeyboardButton('⚙️ Stato Assistente IA')
     
-    markup.add(btn_schufa, btn_legale, btn_marketing, btn_email, btn_analisi, btn_impostazioni)
+    markup.add(btn_1, btn_2, btn_3, btn_4, btn_5, btn_6)
     
     testo = (
-        f"🔒 **Archivio & Assistente Privato di {message.from_user.first_name}**\n\n"
-        "Sistema ad uso personale esclusivo per ricerche legali, analisi documenti e gestione pratiche riservate.\n\n"
-        "Seleziona una sezione dal menu per iniziare:"
+        f"🔒 **Studio Legale, Fiscale e Bancario Privato di {message.from_user.first_name}**\n\n"
+        "Sistema con Intelligenza Artificiale integrata per consulenza giuridica, fiscale e finanziaria (Italia/Germania).\n\n"
+        "Scrivi liberamente il tuo caso o seleziona un'area:"
     )
     bot.reply_to(message, testo, reply_markup=markup, parse_mode="Markdown")
 
 @bot.message_handler(func=lambda message: True)
-def handle_menu(message):
+def handle_ai_query(message):
     if not is_authorized(message):
-        return  # Ignora estranei
+        return
         
-    text = message.text
+    user_text = message.text
     
-    if text == '🇩🇪 Pratiche Schufa & Debiti (DE)':
-        bot.reply_to(
-            message,
-            "🇩🇪 **Gestione Schufa e Debiti in Germania**\n\n"
-            "- Invia i dettagli o la foto del documento/sollecito ricevuto.\n"
-            "- Redazione di proposte di rateizzazione formali (*Ratenzahlungsangebot*).\n"
-            "- Verifiche di regolarità della segnalazione (GDPR e norme tedesche).\n\n"
-            "Incolla qui i dati o il documento da esaminare."
+    # Gestione menu rapido
+    if user_text == '🏛️ Immigrazione, Penale & Civile':
+        bot.reply_to(message, "🏛️ **Area Legale & Tribunali (IT/DE)**\n\nInvia la tua richiesta su cause penali, civili, lavoro, visti o permessi di soggiorno. L'IA analizzerà leggi e ricorsi.")
+        return
+    elif user_text == '📊 Commercialista, Fisco & Tasse':
+        bot.reply_to(message, "📊 **Area Commercialista & Fisco (IT/DE)**\n\nChiedi informazioni su Steuererklärung, 730, tasse, Gewerbe, P.IVA e detrazioni fiscali.")
+        return
+    elif user_text == '🏦 Banche, Crediti, Mutui & Debiti':
+        bot.reply_to(message, "🏦 **Area Banche & Credito**\n\nRichiedi analisi per opzioni di prestito, mutui bancari, trattative con creditori o cancellazione posizioni debitorie.")
+        return
+    elif user_text == '💳 Schufa & Centrali Rischi':
+        bot.reply_to(message, "💳 **Area Schufa & Cancellazione Debiti**\n\nInvia i dati della segnalazione per preparare contestazioni GDPR o proposte di rateizzazione (*Ratenzahlungsangebot*).")
+        return
+    elif user_text == '✉️ Redazione Atti, Ricorsi & Email':
+        bot.reply_to(message, "✉️ **Area Redazione Documenti**\n\nIndica quale documento vuoi che l'IA scriva per te (es. diffida, contratto, ricorso per Ausländerbehörde/Tribunale).")
+        return
+    elif user_text == '⚙️ Stato Assistente IA':
+        bot.reply_to(message, "⚙️ **Stato del Sistema**\n\n- Accesso: Blindato (ID `8795594889`)\n- Modello: Esperto Legale/Fiscale/Bancario\n- Server: Render 24/7 🟢")
+        return
+
+    # Avviso di elaborazione
+    wait_msg = bot.reply_to(message, "⏳ *Elaborazione dell'analisi legale/fiscale con IA in corso...*", parse_mode="Markdown")
+    
+    try:
+        # Chiamata all'API dell'IA
+        response = openai.ChatCompletion.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_text}
+            ],
+            temperature=0.2
         )
-    elif text == '⚖️ Consulenza Legale & Contratti':
-        bot.reply_to(
-            message,
-            "⚖️ **Diritto Civile e Commerciale (Italia / Germania)**\n\n"
-            "- Analisi di clausole contrattuali.\n"
-            "- Stesura di lettere di diffida, reclami o bozze di accordi.\n\n"
-            "Inserisci il testo o l'argomento legale da esaminare."
-        )
-    elif text == '📈 Marketing, B2B & Vendite':
-        bot.reply_to(
-            message,
-            "📈 **Strategie & Ricerche di Mercato**\n\n"
-            "- Analisi di prodotti, concorrenza e prezzi.\n"
-            "- Piani strategici per mercati italiano ed europeo."
-        )
-    elif text == '✉️ Generatore Email & Trattative':
-        bot.reply_to(
-            message,
-            "✉️ **Comunicazioni e Trattative Riservate**\n\n"
-            "- Scrittura email formali per partner, legali e fornitori.\n"
-            "- Gestione trattative e condizioni commerciali."
-        )
-    elif text == '📊 Analisi Aziendale & Bilanci':
-        bot.reply_to(
-            message,
-            "📊 **Controllo di Gestione Privato**\n\n"
-            "- Calcolo margini, costi e pianificazione finanziaria.\n"
-            "Inserisci i dati o i calcoli numerici da elaborare."
-        )
-    elif text == '⚙️ Info & Modalità D\'Uso':
-        bot.reply_to(
-            message,
-            "⚙️ **Stato del Sistema**\n\n"
-            "- **Modalità:** Privata ed esclusiva (ID protetto) 🔒\n"
-            "- **Stato:** Attivo e operativo su Render 🟢"
-        )
-    else:
-        bot.reply_to(
-            message,
-            f"📥 **Dati e note ricevute:**\n\n\"{text}\"\n\n"
-            "Sto elaborando l'analisi privata e la preparazione dei documenti richiesti...",
+        ai_reply = response.choices[0].message.content
+        
+        bot.edit_message_text(ai_reply, chat_id=message.chat.id, message_id=wait_msg.message_id, parse_mode="Markdown")
+        
+    except Exception as e:
+        bot.edit_message_text(
+            f"⚠️ **Nota di configurazione:** Il codice è aggiornato. Per far rispondere l'IA su Telegram, inserisci la tua `OPENAI_API_KEY` nelle impostazioni **Environment** su Render.\n\nDettaglio tecnico: `{str(e)}`",
+            chat_id=message.chat.id,
+            message_id=wait_msg.message_id,
             parse_mode="Markdown"
         )
 
