@@ -1,3 +1,4 @@
+
 import os
 import requests
 import json
@@ -118,4 +119,8 @@ def handle_ai_query(message):
     bot.edit_message_text(ai_response, chat_id=message.chat.id, message_id=wait_msg.message_id, parse_mode="Markdown")
 
 if __name__ == "__main__":
+    try:
+        bot.remove_webhook()
+    except Exception:
+        pass
     bot.infinity_polling(skip_pending_updates=True)
