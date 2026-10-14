@@ -1,33 +1,46 @@
 import os
+import requests
+import json
 import telebot
 from telebot import types
 from flask import Flask
 from threading import Thread
-import google.generativeai as genai
 
 # --- CONFIGURAZIONE PRIVATA ---
 MY_TELEGRAM_ID = 8795594889
 TELEGRAM_TOKEN = '8902053569:AAHsDt8aesAcw01xZu_qJrOk0kxQp10thB8'
 
-# Chiave API Gemini letta dalle variabili d'ambiente di Render
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
+system_instruction = (
+    "Sei uno studio legale, fiscale e bancario virtuale di massimo livello, "
+    "specializzato in Diritto Tedesco (DE) e Italiano (IT). "
+    "Fornisci consulenze operative, tecniche, giuridiche ed economiche altamente dettagliate."
+)
 
-system_instruction = """
-Sei uno studio legale, fiscale e bancario virtuale di massimo livello, specializzato in Diritto Tedesco (DE) e Italiano (IT).
-Fornisci consulenze operative, tecniche, giuridiche ed economiche altamente dettagliate.
-"""
-
-# Configurazione modello Gemini
-try:
-    model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
-        system_instruction=system_instruction
-    )
-except Exception:
-    model = None
+def ask_gemini(prompt):
+    if not GEMINI_API_KEY:
+        return "⚠️ Errore: Chiave API Gemini non configurata nelle variabili d'ambiente di Render."
+    
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    
+    headers = {'Content-Type': 'application/json'}
+    data = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": f"{system_instruction}\n\nUtente: {prompt}"}
+                ]
+            }
+        ]
+    }
+    
+    try:
+        response = requests.post(url, headers=headers, data=json.dumps(data), timeout=30)
+        res_json = response.json()
+        return res_json['candidates'][0]['content']['parts'][0]['text']
+    except Exception as e:
+        return f"⚠️ Errore di connessione all'IA: {str(e)}"
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 app = Flask(__name__)
@@ -101,21 +114,8 @@ def handle_ai_query(message):
 
     wait_msg = bot.reply_to(message, "⏳ *Elaborazione dell'analisi legale/fiscale in corso...*", parse_mode="Markdown")
     
-    try:
-        if not model:
-            bot.edit_message_text("⚠️ **Errore:** Modello Gemini non inizializzato.", chat_id=message.chat.id, message_id=wait_msg.message_id)
-            return
-
-        response = model.generate_content(user_text)
-        bot.edit_message_text(response.text, chat_id=message.chat.id, message_id=wait_msg.message_id, parse_mode="Markdown")
-        
-    except Exception as e:
-        bot.edit_message_text(
-            f"⚠️ **Errore di risposta IA:** `{str(e)}`",
-            chat_id=message.chat.id,
-            message_id=wait_msg.message_id,
-            parse_mode="Markdown"
-        )
+    ai_response = ask_gemini(user_text)
+    bot.edit_message_text(ai_response, chat_id=message.chat.id, message_id=wait_msg.message_id, parse_mode="Markdown")
 
 if __name__ == "__main__":
     bot.infinity_polling(skip_pending_updates=True)
