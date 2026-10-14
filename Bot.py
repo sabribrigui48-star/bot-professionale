@@ -23,7 +23,7 @@ def ask_gemini(prompt):
     if not GEMINI_API_KEY:
         return "⚠️ Errore: GEMINI_API_KEY non configurata su Render."
     
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
     headers = {'Content-Type': 'application/json'}
     data = {
         "contents": [
