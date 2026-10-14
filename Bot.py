@@ -20,8 +20,8 @@ def ask_gemini(prompt):
     if not GEMINI_API_KEY:
         return "⚠️ Errore: Chiave API Gemini non configurata nelle variabili d'ambiente di Render."
     
-    # URL ufficiale corretto per l'endpoint v1 senza -latest
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    # Endpoint v1beta per massima compatibilita con i modelli attuali
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     
     headers = {'Content-Type': 'application/json'}
     data = {
