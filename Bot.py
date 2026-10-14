@@ -1,4 +1,3 @@
-
 import os
 import telebot
 from telebot import types
@@ -8,7 +7,7 @@ import google.generativeai as genai
 
 # --- CONFIGURAZIONE PRIVATA ---
 MY_TELEGRAM_ID = 8795594889
-TELEGRAM_TOKEN = '8902053569:AAFpamqLGB8zIEi7ZuL7teTsadNaB0ga2Us'
+TELEGRAM_TOKEN = '8902053569:AAHsDt8aesAcw01xZu_qJrOk0kxQp10thB8'
 
 # Chiave API Gemini letta dalle variabili d'ambiente di Render
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
