@@ -1,15 +1,13 @@
+
 import os
 import requests
 import json
 import telebot
 from telebot import types
-from flask import Flask
-from threading import Thread
+from flask import Flask, request
 
-# --- CONFIGURAZIONE PRIVATA ---
 MY_TELEGRAM_ID = 8795594889
 TELEGRAM_TOKEN = '8902053569:AAHsDt8aesAcw01xZu_qJrOk0kxQp10thB8'
-
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 system_instruction = (
@@ -23,7 +21,6 @@ def ask_gemini(prompt):
         return "⚠️ Errore: Chiave API Gemini non configurata nelle variabili d'ambiente di Render."
     
     url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
-    
     headers = {'Content-Type': 'application/json'}
     data = {
         "contents": [
@@ -47,27 +44,30 @@ def ask_gemini(prompt):
             if "content" in candidate and "parts" in candidate["content"]:
                 return candidate["content"]["parts"][0]["text"]
                 
-        return f"⚠️ Risposta non valida ricevuta da Google Gemini."
+        return "⚠️ Risposta non valida ricevuta da Google Gemini."
     except Exception as e:
         return f"⚠️ Errore di connessione all'IA: {str(e)}"
 
-bot = telebot.TeleBot(TELEGRAM_TOKEN)
+bot = telebot.TeleBot(TELEGRAM_TOKEN, threaded=False)
 app = Flask(__name__)
+
+WEBHOOK_URL = f"https://bot-professionale-sabri.onrender.com/{TELEGRAM_TOKEN}"
+bot.remove_webhook()
+bot.set_webhook(url=WEBHOOK_URL)
 
 @app.route('/')
 def home():
-    return "Studio Legale & Fiscale Gemini IA - Server Attivo 24/7"
+    return "Studio Legale & Fiscale Gemini IA - Webhook Attivo 24/7"
 
-def run():
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
-
-def keep_alive():
-    t = Thread(target=run)
-    t.daemon = True
-    t.start()
-
-keep_alive()
+@app.route(f'/{TELEGRAM_TOKEN}', methods=['POST'])
+def webhook():
+    if request.headers.get('content-type') == 'application/json':
+        json_string = request.get_data().decode('utf-8')
+        update = telebot.types.Update.de_json(json_string)
+        bot.process_new_updates([update])
+        return "OK", 200
+    else:
+        return "Forbidden", 403
 
 def is_authorized(message):
     return message.from_user.id == MY_TELEGRAM_ID
@@ -78,14 +78,12 @@ def send_welcome(message):
         return
         
     markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-    
     btn_1 = types.KeyboardButton('🏛️ Immigrazione, Penale & Civile')
     btn_2 = types.KeyboardButton('📊 Commercialista, Fisco & Tasse')
     btn_3 = types.KeyboardButton('🏦 Banche, Crediti, Mutui & Debiti')
     btn_4 = types.KeyboardButton('💳 Schufa & Centrali Rischi')
     btn_5 = types.KeyboardButton('✉️ Redazione Atti, Ricorsi & Email')
     btn_6 = types.KeyboardButton('⚙️ Stato Assistente IA')
-    
     markup.add(btn_1, btn_2, btn_3, btn_4, btn_5, btn_6)
     
     testo = (
@@ -118,17 +116,13 @@ def handle_ai_query(message):
         bot.reply_to(message, "✉️ **Area Redazione Documenti**\n\nIndica quale documento vuoi che l'IA scriva per te (diffida, contratto, ricorso).")
         return
     elif user_text == '⚙️ Stato Assistente IA':
-        bot.reply_to(message, "⚙️ **Stato del Sistema**\n\n- Accesso: Blindato (ID `8795594889`)\n- Motore IA: Google Gemini Flash\n- Server: Render 24/7 🟢")
+        bot.reply_to(message, "⚙️ **Stato del Sistema**\n\n- Accesso: Blindato (ID `8795594889`)\n- Motore IA: Google Gemini Flash\n- Server: Render Webhook 🟢")
         return
 
     wait_msg = bot.reply_to(message, "⏳ *Elaborazione dell'analisi legale/fiscale in corso...*", parse_mode="Markdown")
-    
     ai_response = ask_gemini(user_text)
     bot.edit_message_text(ai_response, chat_id=message.chat.id, message_id=wait_msg.message_id, parse_mode="Markdown")
 
 if __name__ == "__main__":
-    try:
-        bot.remove_webhook()
-    except Exception:
-        pass
-    bot.infinity_polling()
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
