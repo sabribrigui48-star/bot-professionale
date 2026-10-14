@@ -1,10 +1,11 @@
 import os
+import requests
+import json
 import telebot
 from telebot import types
 from flask import Flask, request
-from google import genai
 
-# --- CONFIGURAZIONE PRIVATA ---
+# --- CONFIGURAZIONE PRINCIPALE ---
 MY_TELEGRAM_ID = 8795594889
 TELEGRAM_TOKEN = '8902053569:AAHsDt8aesAcw01xZu_qJrOk0kxQp10thB8'
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
@@ -15,56 +16,55 @@ system_instruction = (
     "Fornisci consulenze operative, tecniche, giuridiche ed economiche altamente dettagliate."
 )
 
-client = None
-if GEMINI_API_KEY:
-    try:
-        client = genai.Client(api_key=GEMINI_API_KEY)
-    except Exception as e:
-        print(f"Errore inizializzazione client GenAI: {e}")
-
-def ask_gemini(prompt):
-    if not GEMINI_API_KEY or not client:
-        return "⚠️ Errore: Chiave API Gemini non configurata nelle variabili d'ambiente di Render."
-    
-    try:
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=f"{system_instruction}\n\nUtente: {prompt}"
-        )
-        if response and response.text:
-            return response.text
-        return "⚠️ Nessuna risposta valida generata da Gemini."
-    except Exception as e:
-        try:
-            response = client.models.generate_content(
-                model='gemini-1.5-flash',
-                contents=f"{system_instruction}\n\nUtente: {prompt}"
-            )
-            if response and response.text:
-                return response.text
-        except Exception as e2:
-            return f"⚠️ Errore di connessione all'IA Google: {str(e2)}"
-
 bot = telebot.TeleBot(TELEGRAM_TOKEN, threaded=False)
 app = Flask(__name__)
 
-WEBHOOK_URL = f"https://bot-professionale-sabri.onrender.com/{TELEGRAM_TOKEN}"
-bot.remove_webhook()
-bot.set_webhook(url=WEBHOOK_URL)
-
-@app.route('/')
-def home():
-    return "Studio Legale & Fiscale Gemini IA - Webhook Attivo 24/7"
+def ask_gemini(prompt):
+    if not GEMINI_API_KEY:
+        return "⚠️ Errore: GEMINI_API_KEY non configurata su Render."
+    
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    headers = {'Content-Type': 'application/json'}
+    data = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": f"{system_instruction}\n\nDomanda utente: {prompt}"}
+                ]
+            }
+        ]
+    }
+    
+    try:
+        res = requests.post(url, headers=headers, json=data, timeout=25)
+        res_json = res.json()
+        
+        if "error" in res_json:
+            return f"⚠️ Errore Google API: {res_json['error'].get('message', 'Errore sconosciuto')}"
+            
+        if "candidates" in res_json and len(res_json["candidates"]) > 0:
+            parts = res_json["candidates"][0].get("content", {}).get("parts", [])
+            if parts:
+                return parts[0].get("text", "Risposta vuota dall'IA.")
+                
+        return "⚠️ Nessuna risposta ricevuta dal modello IA."
+    except Exception as e:
+        return f"⚠️ Errore di connessione: {str(e)}"
 
 @app.route(f'/{TELEGRAM_TOKEN}', methods=['POST'])
 def webhook():
-    if request.headers.get('content-type') == 'application/json':
-        json_string = request.get_data().decode('utf-8')
-        update = telebot.types.Update.de_json(json_string)
-        bot.process_new_updates([update])
-        return "OK", 200
-    else:
-        return "Forbidden", 403
+    try:
+        if request.headers.get('content-type') == 'application/json':
+            json_string = request.get_data().decode('utf-8')
+            update = telebot.types.Update.de_json(json_string)
+            bot.process_new_updates([update])
+    except Exception as e:
+        print(f"Errore webhook: {e}")
+    return "OK", 200
+
+@app.route('/')
+def home():
+    return "Assistente Legale e Fiscale - Webhook Attivo", 200
 
 def is_authorized(message):
     return message.from_user.id == MY_TELEGRAM_ID
@@ -113,7 +113,7 @@ def handle_ai_query(message):
         bot.reply_to(message, "✉️ **Area Redazione Documenti**\n\nIndica quale documento vuoi che l'IA scriva per te (diffida, contratto, ricorso).")
         return
     elif user_text == '⚙️ Stato Assistente IA':
-        bot.reply_to(message, "⚙️ **Stato del Sistema**\n\n- Accesso: Blindato (ID `8795594889`)\n- Motore IA: Google GenAI SDK (Official)\n- Server: Render Webhook 🟢")
+        bot.reply_to(message, "⚙️ **Stato del Sistema**\n\n- Accesso: Blindato (ID `8795594889`)\n- Motore IA: Google Gemini Flash\n- Server: Render Webhook 🟢")
         return
 
     wait_msg = bot.reply_to(message, "⏳ *Elaborazione dell'analisi legale/fiscale in corso...*", parse_mode="Markdown")
