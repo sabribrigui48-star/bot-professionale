@@ -1,4 +1,3 @@
-
 import os
 import requests
 import json
@@ -6,6 +5,7 @@ import telebot
 from telebot import types
 from flask import Flask, request
 
+# --- CONFIGURAZIONE PRIVATA ---
 MY_TELEGRAM_ID = 8795594889
 TELEGRAM_TOKEN = '8902053569:AAHsDt8aesAcw01xZu_qJrOk0kxQp10thB8'
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
@@ -20,7 +20,9 @@ def ask_gemini(prompt):
     if not GEMINI_API_KEY:
         return "⚠️ Errore: Chiave API Gemini non configurata nelle variabili d'ambiente di Render."
     
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
+    # URL ufficiale corretto per l'endpoint v1 senza -latest
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    
     headers = {'Content-Type': 'application/json'}
     data = {
         "contents": [
@@ -48,9 +50,11 @@ def ask_gemini(prompt):
     except Exception as e:
         return f"⚠️ Errore di connessione all'IA: {str(e)}"
 
+# Inizializzazione bot e server Flask
 bot = telebot.TeleBot(TELEGRAM_TOKEN, threaded=False)
 app = Flask(__name__)
 
+# Configurazione automatica del Webhook su Render
 WEBHOOK_URL = f"https://bot-professionale-sabri.onrender.com/{TELEGRAM_TOKEN}"
 bot.remove_webhook()
 bot.set_webhook(url=WEBHOOK_URL)
